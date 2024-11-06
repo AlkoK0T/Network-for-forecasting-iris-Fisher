@@ -3,6 +3,7 @@ import scipy.special
 from tkinter import *
 from tkinter import ttk
 from minmaxconfig import minmax
+import random
 train_dict = {
             "Iris-setosa\n" : [1,0,0],
             "Iris-versicolor\n" : [0,1,0],
@@ -10,7 +11,6 @@ train_dict = {
 }
 class network:
     def __init__(self, innodes, hidenodes,outnodes, learrate, rdbool):
-        #region declaration
         self.inodes=innodes
         self.hnodes=hidenodes
         self.onodes=outnodes
@@ -26,7 +26,6 @@ class network:
             self.wih=numpy.array(wih)
             self.who=numpy.array(who)
         self.act_func = lambda x:scipy.special.expit(x)
-        #endregion
     def train(self,input_list,target_list):
         inp = numpy.array(input_list,ndmin=2).T
         targ = numpy.array(target_list,ndmin=2).T
@@ -85,6 +84,7 @@ class network:
         #endregion
         minm=minmax()
         for i in range(epochs):
+            random.shuffle(file)
             for rec in file:
                 all_val=[j for j in rec.split(',')]
                 targets = [train_dict.get(all_val[-1])]
@@ -106,15 +106,15 @@ class network:
             epochbar.step(1)
             root.update()
             #endregion
-        c=0
+        pass
         root.mainloop()
 #region epoch
-n = network(4,10,3,0.1,True)
+n = network(4,10,3,0.1,False)
 tdf = open("iris.csv", 'r')
 tdl = tdf.readlines()
 tdl = tdl[1:]
 tdf.close()
-n.epoch(tdl,5)
+n.epoch(tdl,100)
 #endregion
 #region result
 tedf = open("iris.csv", 'r')
@@ -123,10 +123,12 @@ tedl = tedl[1:]
 tedf.close()
 pr=0
 scorecard=[]
-
+minm=minmax()
 for rec in tedl:
-    all_val=rec.split(',')
-    inputs = (numpy.asarray(all_val[1:-1],dtype=float) / 255.0 * 0.99) + 0.01
+    all_val=[j for j in rec.split(',')]
+    targets = [train_dict.get(all_val[-1])]
+    chngevar=[minm.coefficient(j-1,float(all_val[j])) for j in range(1,len(all_val)-1) ]
+    inputs = (numpy.asarray(chngevar,dtype=float))
     out=n.query(inputs)
     if numpy.argmax(out)==train_dict.get(all_val[-1]).index(1):
         scorecard.append(1)

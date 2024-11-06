@@ -2,7 +2,7 @@ import numpy
 import scipy.special
 from tkinter import *
 from tkinter import ttk
-output_nodes=3
+from minmaxconfig import minmax
 train_dict = {
             "Iris-setosa\n" : [1,0,0],
             "Iris-versicolor\n" : [0,1,0],
@@ -10,16 +10,13 @@ train_dict = {
 }
 class network:
     def __init__(self, innodes, hidenodes,outnodes, learrate, rdbool):
+        #region declaration
         self.inodes=innodes
         self.hnodes=hidenodes
         self.onodes=outnodes
         self.lrate=learrate
-        self.train_dict = {
-            "Iris-setosa\n" : [1,0,0],
-            "Iris-versicolor\n" : [0,1,0],
-            "Iris-virginica\n" : [0,0,1]
-        }
         self.righttrainbool=0
+
         if (rdbool):
             self.wih = numpy.random.normal(0.0,pow(hidenodes,-0.5),(hidenodes,innodes))
             self.who = numpy.random.normal(0.0,pow(outnodes,-0.5), (outnodes, hidenodes))
@@ -29,7 +26,7 @@ class network:
             self.wih=numpy.array(wih)
             self.who=numpy.array(who)
         self.act_func = lambda x:scipy.special.expit(x)
-        pass
+        #endregion
     def train(self,input_list,target_list):
         inp = numpy.array(input_list,ndmin=2).T
         targ = numpy.array(target_list,ndmin=2).T
@@ -61,6 +58,7 @@ class network:
         finalout = self.act_func(finalinput)
         return finalout
     def epoch(self, file, epochs):
+        # region ttk
         root = Tk()
         root.title("Train indicator")
         root.geometry("300x150") 
@@ -83,16 +81,22 @@ class network:
         effitext.grid(row=3, column=1)
         effivar = ttk.Label(textvariable=efficienty)
         effivar.grid(row=3, column=2) 
+        counter=[]
+        #endregion
+        minm=minmax()
         for i in range(epochs):
             for rec in file:
-                all_val=rec.split(',')
-                inputs = (numpy.asarray(all_val[1:-1],dtype=float))
-                targets = train_dict.get(all_val[-1])
+                all_val=[j for j in rec.split(',')]
+                targets = [train_dict.get(all_val[-1])]
+                chngevar=[minm.coefficient(j-1,float(all_val[j])) for j in range(1,len(all_val)-1) ]
+                inputs = (numpy.asarray(chngevar,dtype=float))
+                counter+=targets
                 n.train(inputs,targets)
                 trainsetbar.step(1)
                 efficienty=self.righttrainbool/(trainset_var.get()+0.01)
                 root.update()
                 pass
+            #region weight write
             wih=open("wih.py",'w')
             wih.write("wih= " + str(self.wih.tolist()))
             wih.close()
@@ -101,13 +105,18 @@ class network:
             who.close()
             epochbar.step(1)
             root.update()
+            #endregion
+        c=0
         root.mainloop()
+#region epoch
 n = network(4,10,3,0.1,True)
 tdf = open("iris.csv", 'r')
 tdl = tdf.readlines()
 tdl = tdl[1:]
 tdf.close()
 n.epoch(tdl,5)
+#endregion
+#region result
 tedf = open("iris.csv", 'r')
 tedl = tedf.readlines()
 tedl = tedl[1:]
@@ -126,4 +135,6 @@ for rec in tedl:
     pass
 scorecard_array = numpy.asarray(scorecard)
 print ("эффективность = ", scorecard_array.sum() / scorecard_array.size)
+#endregion
+
 fd=0

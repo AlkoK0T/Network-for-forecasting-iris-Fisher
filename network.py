@@ -16,6 +16,7 @@ class network:
         self.onodes=outnodes
         self.lrate=learrate
         self.righttrainbool=0
+        self.efficientypointer=0
 
         if (rdbool):
             self.wih = numpy.random.normal(0.0,pow(hidenodes,-0.5),(hidenodes,innodes))
@@ -37,8 +38,6 @@ class network:
         if numpy.argmax(finalout)==numpy.argmax(targ):
             self.righttrainbool+=1
         hidenerrors = numpy.dot(self.who.T, outputerrors)
-        cd=outputerrors*finalout*(1.0-finalout)
-        cd1=numpy.transpose(hidenout)
         self.who += self.lrate*numpy.dot((outputerrors*finalout*(1.0-finalout)),numpy.transpose(hidenout))
         self.wih += self.lrate*numpy.dot((hidenerrors*hidenout*(1.0-hidenout)),numpy.transpose(inp))
         pass
@@ -91,9 +90,11 @@ class network:
                 chngevar=[minm.coefficient(j-1,float(all_val[j])) for j in range(1,len(all_val)-1) ]
                 inputs = (numpy.asarray(chngevar,dtype=float))
                 counter+=targets
+                self.efficientypointer+=1
                 n.train(inputs,targets)
                 trainsetbar.step(1)
-                efficienty=self.righttrainbool/(trainset_var.get()+0.01)
+                efficienty=self.righttrainbool/self.efficientypointer
+                effitext.config(text=efficienty)
                 root.update()
                 pass
             #region weight write
@@ -114,7 +115,7 @@ tdf = open("iris.csv", 'r')
 tdl = tdf.readlines()
 tdl = tdl[1:]
 tdf.close()
-n.epoch(tdl,100)
+n.epoch(tdl,7)
 #endregion
 #region result
 tedf = open("iris.csv", 'r')
